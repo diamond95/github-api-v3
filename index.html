@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+		<title>Github api</title>
+		<meta name="viewport" content="width=device-width, initial-scale=1.0">
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+		<link rel="stylesheet" type="text/css" href="css/style.css" />
+		<script type="text/javascript" src="js/jquery-1.10.2.min.js"></script>
+		
+</head>
+
+<body>
+
+<div class="header">
+  <div class="container">
+    <h1>GitHub API v3</h1>
+    <span class="slogan"><font color="white">Github developer</font></span>
+  </div>
+</div>
+
+<div class="row">
+	<div class="col-4"></div>
+	<div class="col-4">
+		<div class="pocetna">
+			<h1>Search user's profile & repositories</h1>
+		  <div class="container"></div>
+		</div>
+	</div>
+	<div class="col-4"></div>
+</div>
+<br /><br /><br />
+<div class="row">
+	<div class="col-2"></div>
+	<div class="col-8">
+		<div class="pretraga">
+			<h1>Enter a single Github username</h1>    
+				<input type="text" class="inputstyle" id="github_korisnik" placeholder="" />
+				<button class="button" id="pretraga">Search</button>
+				<div style="display:none;margin-top:10px;" class="loader"><img src="images/loader.gif"></div>
+				<div id="rezultat" style="display:none;" class="clearfix rezultat slide"></div>
+				<div class="warning" style="display:none;">Enter github name!</div>
+		</div>
+	</div>
+	<div class="col-2"></div>
+</div>
+
+<script type="text/javascript">
+$(function(){
+  $('#pretraga').on('click', function(e){
+        e.preventDefault();
+	
+	if(!$("#github_korisnik").val()) {
+		$('.loader').hide();
+	} else {
+		$('.loader').show();
+		$('#rezultat').show();
+		setTimeout(function(){
+			 $('.loader').fadeOut();
+		}, 1000);
+	}
+	
+    
+	
+	function apiJSON(url, callback) { // callback s api
+		$.ajax({
+		  url: url,
+		  complete: function(xhr) {
+			callback.call(null, xhr.responseJSON);
+		  }
+		});
+	}
+    
+    var korisnik = $('#github_korisnik').val();
+    var user   = 'https://api.github.com/users/'+korisnik;
+    var user_repozitorij  = 'https://api.github.com/users/'+korisnik+'/repos';
+    
+    apiJSON(user, function(json) {
+      if(json.message == "Not found!" || korisnik == '') {
+        $('#rezultat').html("<h2>User not found!</h2>");
+		
+      } else {
+	  
+        var ime = json.name;
+        var korisnik = json.login;
+        var avatar = json.avatar_url;
+        var url_profila = json.html_url;
+        var lokacija = json.lokacija;
+        var repozitorij_num = json.public_repos;
+        
+        if(ime == undefined) { ime = korisnik; }
+        
+        var prikaz = '<h2>'+ime+' <span class="malo">(@<a href="'+url_profila+'" target="_blank">'+korisnik+'</a>)</span></h2>';
+        prikaz = prikaz + '<div class=""><div class="avatar"><a href="'+url_profila+'" target="_blank"><img src="'+avatar+'" width="80" height="80" alt="'+korisnik+'"></a></div>';
+        prikaz = prikaz + '<p>Repositories: '+repozitorij_num+'</p></div>';
+        prikaz = prikaz + '<div class="">';
+        
+        var repozitorij;
+        $.getJSON(user_repozitorij, function(json){
+          repozitorij = json;
+		  //console.log(json);
+          prikaz_rezultata();               
+        });
+        
+        function prikaz_rezultata() {
+          if(repozitorij.length == 0) { 
+				prikaz = prikaz + '<p>No data found!</p></div>'; 
+		  } else {
+            prikaz = prikaz + '<p><strong>Repositories list:</strong></p><br />';
+            
+			$.each(repozitorij, function(index) {
+              prikaz = prikaz + '<br /><a href="'+repozitorij[index].html_url+'" target="_blank">'+repozitorij[index].name + '</a>';
+            });
+			//alert("test");
+            prikaz = prikaz + '</div>';
+          }
+          $('#rezultat').html(prikaz);
+        }
+      }
+    });
+  });
+  $('#github_korisnik').on('keyup', function(e){
+	$('#rezultat').fadeOut().html("");
+  });
+});
+</script>
+<script>
+$('#pretraga').on('click', function(e){
+    if(!$("#github_korisnik").val()) {
+        $('.warning').show();
+		setTimeout(function(){
+			$('.warning').fadeOut();
+		}, 3000);
+    };
+});
+</script>
+
+<div id="footer">
+  <div class="container">
+    <h5>Ivan Miljanić - GitHub Api v3 2018</h5>
+  </div>
+</div>
+</body>
+</html>
